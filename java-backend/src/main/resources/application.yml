@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: insider-risk-backend
+  datasource:
+    url: jdbc:sqlite:../../databases/insider_risk.db
+    driver-class-name: org.sqlite.JDBC
+  jpa:
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+server:
+  port: 8080
+
+bigquery:
+  project-id: ${BIGQUERY_PROJECT_ID:your-project-id}
+  dataset-id: ${BIGQUERY_DATASET_ID:insider_risk}
+

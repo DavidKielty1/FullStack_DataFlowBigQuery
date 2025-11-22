@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nextjs-app
+  namespace: insider-risk
+  labels:
+    app: nextjs-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nextjs-app
+  template:
+    metadata:
+      labels:
+        app: nextjs-app
+    spec:
+      containers:
+      - name: nextjs-app
+        image: insider-risk/nextjs-app:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: JAVA_BACKEND_URL
+          value: "http://java-backend:8080"
+        - name: DATABASE_PATH
+          value: "/app/databases/insider_risk.db"
+        volumeMounts:
+        - name: databases
+          mountPath: /app/databases
+          readOnly: true
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      volumes:
+      - name: databases
+        persistentVolumeClaim:
+          claimName: databases-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextjs-app
+  namespace: insider-risk
+spec:
+  selector:
+    app: nextjs-app
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 3000
+  type: LoadBalancer
+

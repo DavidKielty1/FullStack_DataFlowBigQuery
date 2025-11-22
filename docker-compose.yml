@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  # Next.js Application
+  nextjs-app:
+    build:
+      context: ./nextjs-app
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - JAVA_BACKEND_URL=http://java-backend:8080
+      - DATABASE_PATH=/app/databases/insider_risk.db
+    volumes:
+      - ./databases:/app/databases:ro
+    depends_on:
+      - java-backend
+    networks:
+      - insider-risk-network
+
+  # Java Backend Service
+  java-backend:
+    build:
+      context: ./java-backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:sqlite:/app/databases/insider_risk.db
+      - BIGQUERY_PROJECT_ID=${BIGQUERY_PROJECT_ID:-your-project-id}
+      - BIGQUERY_DATASET_ID=${BIGQUERY_DATASET_ID:-insider_risk}
+    volumes:
+      - ./databases:/app/databases
+    networks:
+      - insider-risk-network
+
+networks:
+  insider-risk-network:
+    driver: bridge
+
+volumes:
+  databases:
+    driver: local
+

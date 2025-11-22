@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: insider-risk
+data:
+  bigquery-project-id: "your-gcp-project-id"
+  bigquery-dataset-id: "insider_risk"
+

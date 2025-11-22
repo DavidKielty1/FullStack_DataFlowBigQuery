@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: java-backend
+  namespace: insider-risk
+  labels:
+    app: java-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: java-backend
+  template:
+    metadata:
+      labels:
+        app: java-backend
+    spec:
+      containers:
+      - name: java-backend
+        image: insider-risk/java-backend:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:sqlite:/app/databases/insider_risk.db"
+        - name: BIGQUERY_PROJECT_ID
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: bigquery-project-id
+        - name: BIGQUERY_DATASET_ID
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: bigquery-dataset-id
+        volumeMounts:
+        - name: databases
+          mountPath: /app/databases
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 5
+      volumes:
+      - name: databases
+        persistentVolumeClaim:
+          claimName: databases-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: java-backend
+  namespace: insider-risk
+spec:
+  selector:
+    app: java-backend
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+
