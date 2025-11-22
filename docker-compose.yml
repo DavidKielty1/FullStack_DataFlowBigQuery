@@ -12,7 +12,7 @@ services:
       - DATABASE_PATH=/app/databases/insider_risk.db
       - ANALYTICS_DATABASE_PATH=/app/databases/analytics.db
     volumes:
-      - ./databases:/app/databases:ro
+      - ./databases:/app/databases
     depends_on:
       - java-backend
     networks:

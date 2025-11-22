@@ -9,10 +9,24 @@ export async function GET(request: Request) {
     const path = require('path')
     
     // Use environment variable if set, otherwise use relative path
-    const analyticsDbPath = process.env.ANALYTICS_DATABASE_PATH || 
+    const fs = require('fs')
+    let dbPath = process.env.ANALYTICS_DATABASE_PATH || 
       path.join(process.cwd(), '..', 'databases', 'analytics.db')
     
-    const dbPath = analyticsDbPath
+    // Only resolve if it's a relative path (not starting with /)
+    if (!dbPath.startsWith('/')) {
+      dbPath = path.resolve(dbPath)
+    }
+    
+    // Check if database file exists (directory is mounted via Docker volume)
+    if (!fs.existsSync(dbPath)) {
+      console.error(`Analytics database file not found at: ${dbPath}`)
+      return NextResponse.json(
+        { success: false, error: `Database file not found at: ${dbPath}` },
+        { status: 500 }
+      )
+    }
+    
     const db = new Database(dbPath, { readonly: true })
     
     // Get aggregated analytics

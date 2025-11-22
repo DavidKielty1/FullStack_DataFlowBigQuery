@@ -4,7 +4,7 @@ const nextConfig = {
   output: 'standalone',
   env: {
     JAVA_BACKEND_URL: process.env.JAVA_BACKEND_URL || 'http://localhost:8080',
-    DATABASE_PATH: process.env.DATABASE_PATH || '../databases/insider_risk.db',
+    // DATABASE_PATH is server-side only, don't expose via env config
   },
 }
 
