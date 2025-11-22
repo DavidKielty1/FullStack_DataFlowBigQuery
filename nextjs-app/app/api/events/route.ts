@@ -12,7 +12,9 @@ export async function GET(request: Request) {
     const Database = require('better-sqlite3')
     const path = require('path')
     
-    const dbPath = path.join(process.cwd(), '..', 'databases', 'insider_risk.db')
+    // Use environment variable if set, otherwise use relative path
+    const dbPath = process.env.DATABASE_PATH || 
+      path.join(process.cwd(), '..', 'databases', 'insider_risk.db')
     const db = new Database(dbPath, { readonly: true })
     
     // Query events (this would typically come from BigQuery in production)

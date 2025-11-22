@@ -62,24 +62,37 @@ DataFlowBigQuery/
 - Java 17+
 - Maven 3.9+
 - Python 3.9+ (for data pipeline)
-- Docker & Docker Compose
-- SQLite3
+- Docker & Docker Compose (for containerized deployment)
+- SQLite3 (or use Python script instead)
+
+**Note**: See [DOCKER_SETUP.md](DOCKER_SETUP.md) for Docker installation and troubleshooting.
 
 ### 1. Initialize Databases
 
+**Option 1: Using Python (Recommended - Cross-platform)**
+```bash
+cd databases
+python init_databases.py
+```
+
+**Option 2: Using SQLite3 command line (Linux/macOS)**
 ```bash
 cd databases
 chmod +x init_databases.sh
 ./init_databases.sh
 ```
 
-Or manually:
+**Option 3: Manual SQLite commands**
 ```bash
 sqlite3 databases/insider_risk.db < databases/init_databases.sql
 sqlite3 databases/analytics.db < databases/init_databases.sql
 ```
 
+**Note for Windows users**: If `sqlite3` command is not available, use the Python script (Option 1) which works on all platforms.
+
 ### 2. Run with Docker Compose
+
+**Important**: Make sure Docker Desktop is running before executing this command.
 
 ```bash
 docker-compose up --build
@@ -88,6 +101,12 @@ docker-compose up --build
 This will start:
 - Next.js app on http://localhost:3000
 - Java backend on http://localhost:8080
+
+**Troubleshooting Docker on Windows**:
+- Ensure Docker Desktop is installed and running
+- Check Docker Desktop status in system tray
+- Verify Docker is accessible: `docker --version`
+- If you see connection errors, restart Docker Desktop
 
 ### 3. Run Locally (Development)
 

@@ -8,7 +8,11 @@ export async function GET(request: Request) {
     const Database = require('better-sqlite3')
     const path = require('path')
     
-    const dbPath = path.join(process.cwd(), '..', 'databases', 'analytics.db')
+    // Use environment variable if set, otherwise use relative path
+    const analyticsDbPath = process.env.ANALYTICS_DATABASE_PATH || 
+      path.join(process.cwd(), '..', 'databases', 'analytics.db')
+    
+    const dbPath = analyticsDbPath
     const db = new Database(dbPath, { readonly: true })
     
     // Get aggregated analytics

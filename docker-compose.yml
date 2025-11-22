@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Next.js Application
   nextjs-app:
@@ -12,6 +10,7 @@ services:
       - NODE_ENV=production
       - JAVA_BACKEND_URL=http://java-backend:8080
       - DATABASE_PATH=/app/databases/insider_risk.db
+      - ANALYTICS_DATABASE_PATH=/app/databases/analytics.db
     volumes:
       - ./databases:/app/databases:ro
     depends_on:
