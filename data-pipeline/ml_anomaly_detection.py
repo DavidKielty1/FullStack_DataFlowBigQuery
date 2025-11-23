@@ -4,8 +4,7 @@ This demonstrates basic ML concepts for interview discussion.
 """
 
 import numpy as np
-from typing import List, Dict
-import json
+from typing import Any, Dict, List
 
 
 class SimpleAnomalyDetector:
@@ -14,16 +13,18 @@ class SimpleAnomalyDetector:
     Demonstrates ML concepts without requiring scikit-learn.
     """
     
-    def __init__(self):
-        self.baselines = {}  # Store baseline statistics per user
+    def __init__(self) -> None:
+        # Store baseline statistics per user
+        self.baselines: Dict[str, Dict[str, Any]] = {}
     
-    def train(self, historical_events: List[Dict]):
+    def train(self, historical_events: List[Dict[str, Any]]) -> None:
         """
         Train on historical events to establish baseline behavior.
-        This is a simplified version - real ML would use more sophisticated algorithms.
+        This is a simplified version - real ML would use more sophisticated
+        algorithms.
         """
         # Group events by user
-        user_events = {}
+        user_events: Dict[str, List[Dict[str, Any]]] = {}
         for event in historical_events:
             user_id = event.get('user_id', 'unknown')
             if user_id not in user_events:
@@ -34,21 +35,33 @@ class SimpleAnomalyDetector:
         for user_id, events in user_events.items():
             self.baselines[user_id] = self._calculate_baseline(events)
     
-    def _calculate_baseline(self, events: List[Dict]) -> Dict:
+    def _calculate_baseline(
+        self, events: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Calculate baseline statistics for a user."""
         access_counts = [e.get('file_access_count', 0) for e in events]
         transfer_sizes = [e.get('data_transfer_size_mb', 0) for e in events]
         hours = [e.get('hour_of_day', 12) for e in events]
         
         return {
-            'mean_access_count': np.mean(access_counts) if access_counts else 0,
-            'std_access_count': np.std(access_counts) if access_counts else 0,
-            'mean_transfer_size': np.mean(transfer_sizes) if transfer_sizes else 0,
-            'std_transfer_size': np.std(transfer_sizes) if transfer_sizes else 0,
+            'mean_access_count': (
+                np.mean(access_counts) if access_counts else 0
+            ),
+            'std_access_count': (
+                np.std(access_counts) if access_counts else 0
+            ),
+            'mean_transfer_size': (
+                np.mean(transfer_sizes) if transfer_sizes else 0
+            ),
+            'std_transfer_size': (
+                np.std(transfer_sizes) if transfer_sizes else 0
+            ),
             'normal_hours': set(hours),  # Hours when user typically accesses
         }
     
-    def predict_anomaly(self, event: Dict) -> Dict:
+    def predict_anomaly(
+        self, event: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Predict if an event is anomalous based on learned baselines.
         Returns anomaly score and reasons.
@@ -65,23 +78,31 @@ class SimpleAnomalyDetector:
         
         baseline = self.baselines[user_id]
         anomaly_score = 0.0
-        reasons = []
+        reasons: List[str] = []
         
         # Check access count anomaly (using z-score)
         access_count = event.get('file_access_count', 0)
         if baseline['std_access_count'] > 0:
-            z_score = abs((access_count - baseline['mean_access_count']) / baseline['std_access_count'])
+            mean = baseline['mean_access_count']
+            std = baseline['std_access_count']
+            z_score = abs((access_count - mean) / std)
             if z_score > 2:  # More than 2 standard deviations
                 anomaly_score += 0.3
-                reasons.append(f"Unusual access volume (z-score: {z_score:.2f})")
+                reasons.append(
+                    f"Unusual access volume (z-score: {z_score:.2f})"
+                )
         
         # Check data transfer anomaly
         transfer_size = event.get('data_transfer_size_mb', 0)
         if baseline['std_transfer_size'] > 0:
-            z_score = abs((transfer_size - baseline['mean_transfer_size']) / baseline['std_transfer_size'])
+            mean = baseline['mean_transfer_size']
+            std = baseline['std_transfer_size']
+            z_score = abs((transfer_size - mean) / std)
             if z_score > 2:
                 anomaly_score += 0.4
-                reasons.append(f"Unusual data transfer (z-score: {z_score:.2f})")
+                reasons.append(
+                    f"Unusual data transfer (z-score: {z_score:.2f})"
+                )
         
         # Check time anomaly
         hour = event.get('hour_of_day', 12)
@@ -103,7 +124,9 @@ class SimpleAnomalyDetector:
         }
 
 
-def enhance_event_with_ml(event: Dict, detector: SimpleAnomalyDetector) -> Dict:
+def enhance_event_with_ml(
+    event: Dict[str, Any], detector: SimpleAnomalyDetector
+) -> Dict[str, Any]:
     """
     Enhance an event with ML-based anomaly detection.
     This could be integrated into the DataFlow pipeline.
@@ -117,7 +140,8 @@ def enhance_event_with_ml(event: Dict, detector: SimpleAnomalyDetector) -> Dict:
     
     # Combine ML score with rule-based score
     rule_based_score = event.get('risk_score', 0) / 100.0  # Normalize to 0-1
-    combined_score = (anomaly_result['anomaly_score'] * 0.6) + (rule_based_score * 0.4)
+    ml_score = anomaly_result['anomaly_score']
+    combined_score = (ml_score * 0.6) + (rule_based_score * 0.4)
     enhanced_event['combined_risk_score'] = combined_score
     
     return enhanced_event
@@ -127,11 +151,36 @@ def enhance_event_with_ml(event: Dict, detector: SimpleAnomalyDetector) -> Dict:
 if __name__ == '__main__':
     # Sample historical events (normal behavior)
     historical_events = [
-        {'user_id': 'user1', 'file_access_count': 10, 'data_transfer_size_mb': 5, 'hour_of_day': 9},
-        {'user_id': 'user1', 'file_access_count': 12, 'data_transfer_size_mb': 7, 'hour_of_day': 10},
-        {'user_id': 'user1', 'file_access_count': 8, 'data_transfer_size_mb': 3, 'hour_of_day': 14},
-        {'user_id': 'user2', 'file_access_count': 50, 'data_transfer_size_mb': 20, 'hour_of_day': 11},
-        {'user_id': 'user2', 'file_access_count': 45, 'data_transfer_size_mb': 18, 'hour_of_day': 12},
+        {
+            'user_id': 'user1',
+            'file_access_count': 10,
+            'data_transfer_size_mb': 5,
+            'hour_of_day': 9
+        },
+        {
+            'user_id': 'user1',
+            'file_access_count': 12,
+            'data_transfer_size_mb': 7,
+            'hour_of_day': 10
+        },
+        {
+            'user_id': 'user1',
+            'file_access_count': 8,
+            'data_transfer_size_mb': 3,
+            'hour_of_day': 14
+        },
+        {
+            'user_id': 'user2',
+            'file_access_count': 50,
+            'data_transfer_size_mb': 20,
+            'hour_of_day': 11
+        },
+        {
+            'user_id': 'user2',
+            'file_access_count': 45,
+            'data_transfer_size_mb': 18,
+            'hour_of_day': 12
+        },
     ]
     
     # Train detector

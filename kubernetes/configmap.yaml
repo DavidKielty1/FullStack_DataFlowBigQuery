@@ -4,6 +4,6 @@ metadata:
   name: app-config
   namespace: insider-risk
 data:
-  bigquery-project-id: "your-gcp-project-id"
+  bigquery-project-id: "mock-project-id"
   bigquery-dataset-id: "insider_risk"
 

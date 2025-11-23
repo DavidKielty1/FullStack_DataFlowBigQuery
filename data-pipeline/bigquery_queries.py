@@ -4,7 +4,6 @@ These queries can be used to generate insights and feed the Next.js API.
 """
 
 from google.cloud import bigquery
-import pandas as pd
 
 
 class BigQueryAnalytics:

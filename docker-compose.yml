@@ -7,7 +7,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - JAVA_BACKEND_URL=http://java-backend:8080
       - DATABASE_PATH=/app/databases/insider_risk.db
       - ANALYTICS_DATABASE_PATH=/app/databases/analytics.db

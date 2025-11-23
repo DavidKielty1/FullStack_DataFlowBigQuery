@@ -58,71 +58,61 @@ DataFlowBigQuery/
 
 ### Prerequisites
 
-- Node.js 18+
-- Java 17+
-- Maven 3.9+
-- Python 3.9+ (for data pipeline)
-- Docker & Docker Compose (for containerized deployment)
-- SQLite3 (or use Python script instead)
+- **Docker Desktop** (Recommended for local development)
+- Python 3.9+ (for database initialization and data pipeline)
 
 **Note**: See [DOCKER_SETUP.md](DOCKER_SETUP.md) for Docker installation and troubleshooting.
 
-### 1. Initialize Databases
+### Option 1: Docker Compose (Recommended - Easiest) ⭐
 
-**Option 1: Using Python (Recommended - Cross-platform)**
-```bash
-cd databases
-python init_databases.py
-```
+**Quick 3-step setup:**
 
-**Option 2: Using SQLite3 command line (Linux/macOS)**
-```bash
-cd databases
-chmod +x init_databases.sh
-./init_databases.sh
-```
+1. **Initialize databases:**
+   ```bash
+   cd databases
+   python init_databases.py
+   ```
 
-**Option 3: Manual SQLite commands**
-```bash
-sqlite3 databases/insider_risk.db < databases/init_databases.sql
-sqlite3 databases/analytics.db < databases/init_databases.sql
-```
+2. **Start everything:**
+   ```bash
+   docker-compose up --build
+   ```
 
-**Note for Windows users**: If `sqlite3` command is not available, use the Python script (Option 1) which works on all platforms.
+3. **Access the application:**
+   - Next.js app: http://localhost:3000
+   - Java backend: http://localhost:8080
 
-### 2. Run with Docker Compose
+📖 **See [DOCKER_COMPOSE_QUICKSTART.md](DOCKER_COMPOSE_QUICKSTART.md) for detailed guide**
 
-**Important**: Make sure Docker Desktop is running before executing this command.
-
-```bash
-docker-compose up --build
-```
-
-This will start:
-- Next.js app on http://localhost:3000
-- Java backend on http://localhost:8080
-
-**Troubleshooting Docker on Windows**:
+**Troubleshooting Docker:**
 - Ensure Docker Desktop is installed and running
 - Check Docker Desktop status in system tray
-- Verify Docker is accessible: `docker --version`
+- Verify Docker: `docker --version` and `docker-compose --version`
 - If you see connection errors, restart Docker Desktop
 
-### 3. Run Locally (Development)
+### Option 2: Run Locally (Without Docker)
 
-#### Next.js App
-```bash
-cd nextjs-app
-npm install
-npm run dev
-```
+**Prerequisites:** Node.js 18+, Java 17+, Maven 3.9+
 
-#### Java Backend
-```bash
-cd java-backend
-mvn clean install
-mvn spring-boot:run
-```
+1. **Initialize databases:**
+   ```bash
+   cd databases
+   python init_databases.py
+   ```
+
+2. **Start Next.js App:**
+   ```bash
+   cd nextjs-app
+   npm install
+   npm run dev
+   ```
+
+3. **Start Java Backend** (in another terminal):
+   ```bash
+   cd java-backend
+   mvn clean install
+   mvn spring-boot:run
+   ```
 
 ## API Endpoints
 

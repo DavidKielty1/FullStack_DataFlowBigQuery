@@ -35,14 +35,52 @@ class ProcessRiskEvents(beam.DoFn):
                 else element
             )
 
+            # Normalize SQLite data format (convert INTEGER 0/1 to boolean)
+            # Handle both SQLite format (0/1) and JSON format (true/false)
+            event = self._normalize_event(event)
+
             # Calculate risk score (simplified example)
-            risk_score = self._calculate_risk_score(event)
-            event['risk_score'] = risk_score
-            event['risk_level'] = self._determine_risk_level(risk_score)
+            # Only recalculate if not already present
+            if 'risk_score' not in event or event.get('risk_score') is None:
+                risk_score = self._calculate_risk_score(event)
+                event['risk_score'] = risk_score
+                event['risk_level'] = self._determine_risk_level(risk_score)
+            else:
+                # Ensure risk_level is set if risk_score exists
+                if ('risk_level' not in event or
+                        event.get('risk_level') is None):
+                    event['risk_level'] = self._determine_risk_level(
+                        int(event['risk_score'])
+                    )
 
             yield event
         except Exception as e:
             logger.error(f"Error processing event: {e}")
+
+    def _normalize_event(self, event: Dict[str, Any]) -> Dict[str, Any]:
+        """Normalize event data from SQLite format (0/1) to boolean."""
+        normalized = event.copy()
+        
+        # Convert INTEGER 0/1 to boolean for risk calculation
+        bool_fields = [
+            'sensitive_data_access',
+            'unusual_time',
+            'large_data_transfer',
+            'privileged_action'
+        ]
+        
+        for field in bool_fields:
+            value = normalized.get(field)
+            if isinstance(value, int):
+                normalized[field] = bool(value)
+            elif isinstance(value, str):
+                normalized[field] = value.lower() in ('1', 'true', 'yes')
+        
+        # Normalize event_type to lowercase for filtering
+        if 'event_type' in normalized:
+            normalized['event_type'] = str(normalized['event_type']).lower()
+        
+        return normalized
 
     def _calculate_risk_score(self, event: Dict[str, Any]) -> int:
         """Calculate risk score based on event attributes."""
@@ -72,13 +110,15 @@ class ProcessRiskEvents(beam.DoFn):
 # Typed filter functions for event routing
 def filter_access_events(event: Dict[str, Any]) -> bool:
     """Filter for access-related events."""
-    event_type = event.get('event_type', '').lower()
+    # Handle both lowercase (normalized) and uppercase (SQLite) formats
+    event_type = str(event.get('event_type', '')).lower()
     return 'access' in event_type or 'file' in event_type
 
 
 def filter_data_transfer_events(event: Dict[str, Any]) -> bool:
     """Filter for data transfer events."""
-    event_type = event.get('event_type', '').lower()
+    # Handle both lowercase (normalized) and uppercase (SQLite) formats
+    event_type = str(event.get('event_type', '')).lower()
     return (
         'transfer' in event_type or
         'download' in event_type or
@@ -88,13 +128,15 @@ def filter_data_transfer_events(event: Dict[str, Any]) -> bool:
 
 def filter_privileged_events(event: Dict[str, Any]) -> bool:
     """Filter for privileged action events."""
-    event_type = event.get('event_type', '').lower()
+    # Handle both lowercase (normalized) and uppercase (SQLite) formats
+    event_type = str(event.get('event_type', '')).lower()
     return 'privileged' in event_type or 'admin' in event_type
 
 
 def filter_auth_events(event: Dict[str, Any]) -> bool:
     """Filter for authentication events."""
-    event_type = event.get('event_type', '').lower()
+    # Handle both lowercase (normalized) and uppercase (SQLite) formats
+    event_type = str(event.get('event_type', '')).lower()
     return 'authentication' in event_type or 'login' in event_type
 
 
@@ -108,7 +150,13 @@ def filter_sensitive_data_events(event: Dict[str, Any]) -> bool:
 
 def filter_other_events(event: Dict[str, Any]) -> bool:
     """Filter for events that don't match other categories."""
-    event_type = event.get('event_type', '').lower()
+    # Handle both lowercase (normalized) and uppercase (SQLite) formats
+    event_type = str(event.get('event_type', '')).lower()
+    # Convert sensitive_data_access to boolean if needed
+    sensitive_access = event.get('sensitive_data_access', False)
+    if isinstance(sensitive_access, int):
+        sensitive_access = bool(sensitive_access)
+    
     return not any([
         'access' in event_type,
         'transfer' in event_type,
@@ -118,7 +166,7 @@ def filter_other_events(event: Dict[str, Any]) -> bool:
         'admin' in event_type,
         'authentication' in event_type,
         'login' in event_type,
-        event.get('sensitive_data_access', False)
+        sensitive_access
     ])
 
 
@@ -147,6 +195,7 @@ def run_pipeline(
 
     with beam.Pipeline(options=pipeline_options) as pipeline:
         # PCollection of processed risk events
+        # Reads from text files (JSON lines) - can be exported from SQLite
         processed_events: PCollection[Dict[str, Any]] = (  # type: ignore
             pipeline
             | 'ReadEvents' >> ReadFromText(input_path)

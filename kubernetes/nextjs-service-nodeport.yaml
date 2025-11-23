@@ -1,0 +1,18 @@
+# Alternative Next.js Service using NodePort (for local clusters)
+# Use this instead of LoadBalancer if deploying to minikube/kind
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextjs-app
+  namespace: insider-risk
+spec:
+  selector:
+    app: nextjs-app
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 3000
+    nodePort: 30080  # Access at <NODE_IP>:30080
+  type: NodePort
+
+

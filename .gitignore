@@ -58,3 +58,20 @@ ENV/
 #Docs
 /Docs
 Docs/
+
+# Markdown files (ignore all except README.md files)
+*.md
+**/*.md
+# Keep README.md files (case-insensitive variants)
+!README.md
+!readme.md
+!ReadME.md
+!**/README.md
+!**/readme.md
+!**/ReadME.md
+
+# Script files
+*.ps1
+*.sh
+**/*.ps1
+**/*.sh
